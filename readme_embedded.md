@@ -1,4 +1,4 @@
-# pridnig, 30.10.2023
+# pridnig, 31.10.2023
 
 # #######################
 # ## toolchain "master" -> remotes/origin.1.25
@@ -35,7 +35,24 @@ arm-cortex_a8-linux-gnueabhif-gcc --version
 arm-cortex_a8-linux-gnueabhif-gcc -print-sysroot
 
 
- 
+# ################
+# ## SDCARD
+# ################
+
+lsblk
+sdh      8:112  1   7,3G  0 disk 
+└─sdh1   8:113  1   7,3G  0 part /media/peter/rootfs
+
+=> sdh
+umount /dev/sdh1
+
+format-sdcard.sh sdh
+lsblk
+dh      8:112  1   7,3G  0 disk 
+├─sdh1   8:113  1    64M  0 part /media/peter/boot
+└─sdh2   8:114  1     1G  0 part /media/peter/rootfs
+
+
 # ################
 # ## u-boot "2023.07.02"
 # ################
@@ -166,18 +183,75 @@ make ARCH=arm nova.dtb
 => arch/arm/boot/dts/nova.dtb
 
 
+~ # dmesg | grep Machine
+[    0.000000] OF: fdt: Machine model: Nova
+
+
 # ##################
 # ## rootfs
 # ##################
+
+# ---------------------
+# --  rootfs_staging
+# ---------------------
+
+ll rootfs_staging/
+total 56
+drwxrwxr-x 14 peter peter 4096 Aug 14 21:15 ./
+drwxrwxr-x  9 peter peter 4096 Oct 31 17:56 ../
+drwxrwxr-x  2 root  root  4096 Aug 14 20:46 bin/
+drwxrwxr-x  2 root  root  4096 Aug 13 20:32 dev/
+drwxrwxr-x  4 root  root  4096 Aug 17 21:35 etc/
+drwxrwxr-x  2 root  root  4096 Aug 13 10:51 home/
+drwxrwxr-x  2 root  root  4096 Aug 16 21:20 lib/
+drwxrwxr-x  2 root  root  4096 Aug 13 10:51 proc/
+drwxrwxr-x  2 root  root  4096 Aug 25 19:45 root/
+drwxrwxr-x  2 root  root  4096 Aug 14 20:46 sbin/
+drwxrwxr-x  2 root  root  4096 Aug 13 10:51 sys/
+drwxrwxr-x  2 root  root  4096 Aug 13 10:51 tmp/
+drwxrwxr-x  5 root  root  4096 Aug 14 20:46 usr/
+drwxrwxr-x  5 root  root  4096 Aug 17 21:35 var/
+
+
+cat device-table.txt 
+/dev d 755 0 0 - - - - -
+/dev/null c 666  0 1 3 0 0 -
+/dev/console c 600 0 0 5 1 0 0 -
+/dev/ttyO0 c 600 0 0 252 0 0 0 -
+
+genext2fs -b 200000 -d rootfs_staging -D device-table.txt -U rootfs.ext2
+(blocksize 1024k; 200000 x 1024k = 355M)
+#e2fsck rootfs.ext2
+sudo dd if=rootfs.ext2 of=/dev/sdh2
+
+sdh      8:112  1   7,3G  0 disk 
+├─sdh1   8:113  1    64M  0 part /media/peter/boot
+└─sdh2   8:114  1     1G  0 part /media/peter/disk
+sr0     11:0    1  1024M  0 rom  
+
+ls /media/peter/disk/
+bin  dev  etc  home  lib  lost+found  proc  root  sbin  sys  tmp  usr  var
+
+
+# ---------------------
+# --  rootfs_nfs
+# ---------------------
 
 sudo chown -R root:root *
 mkdir /dev/pts
 mount -t devpts devpts /dev/pts
 
+
+
 # ---------------------
 # --  busybox "1_36_stable"
 # ---------------------
 https://busybox.net/tinyutils.html
+
+git branch
+  1_36_stable
+* 1_36_stable.peter
+  master
 
 poweroff
 reboot
@@ -294,15 +368,6 @@ ifconfig eth0 10.0.0.117
 # -- rootfs mount from SDCARD
 # ---------------------
 
-device-table.txt
-/dev d 755 0 0 - - - - -
-/dev/null c 666  0 1 3 0 0 -
-/dev/console c 600 0 0 5 1 0 0 -
-/dev/ttyO0 c 600 0 0 252 0 0 0 -
-
-genext2fs -b 4096 -d rootfs_staging -D device-table.txt -U rootfs.ext2
-e2fsck rootfs.ext2
-sudo dd if=rootfs.ext2 of=/dev/sdh2
 
 fatload mmc 0:1 0x80200000 zImage
 fatload mmc 0:1 0x80f00000 am335x-boneblack.dtb
@@ -318,6 +383,7 @@ bootz 0x80200000 - 0x80f00000
 -rwxr-xr-x  1 root root 1362701 Aug 17 19:40 uRamdisk
 -rwxr-xr-x  1 root root 9990656 Aug 12 15:24 zImage
 
+ifconfig eth0 10.0.0.117
 
 # ---------------------
 # -- Kernel & DeviceTree from SDCARD
@@ -353,7 +419,7 @@ bootz 0x80200000 - 0x80f00000
 
 setenv bootcmd fatload mmc 0:1 0x80200000 zImage\;fatload mmc 0:1 0x80f00000 am335x-boneblack.dtb\;bootz 0x80200000 - 0x80f00000
 
-
+setenv bootcmd fatload mmc 0:1 0x80200000 zImage\;fatload mmc 0:1 0x80f00000 nova.dtb\;bootz 0x80200000 - 0x80f00000
 
 # ---------------------
 # -- Kernel & DeviceTree via TFTP
@@ -386,6 +452,15 @@ setenv bootcmd tftpboot 0x80200000 zImage\;tftpboot 0x80f00000 am335x-boneblack.
 setenv bootcmd tftpboot 0x80200000 zImage\;tftpboot 0x80f00000 nova.dtb\;bootz 0x80200000 - 0x80f00000
 
 
+# ---------------------
+# -- Data transfer
+# ---------------------
+
+Beaglebone
+nc -v -l -p 4321 | tar xfv -
+
+Host
+tar cfv - <program> | nc 10.0.0.117 4321
 
 
 # ################
