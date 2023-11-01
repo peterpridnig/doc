@@ -66,10 +66,8 @@ git push origin master
 git remote show origin
 
 
-github fine grained token
-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
+Login / Settings / Developer Settings / Personal Access Token / Classic
 
 github personal access token
-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
-
+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
 
