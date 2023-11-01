@@ -320,16 +320,29 @@ Note: use -E option to log on stderr
 dropbear -R -E -b dropbear -R -b /etc/dropbear/dropbear.banner
 
 client
-ssh-keygen -f ~/id_rsa -t rsa
+ssh-keygen -f ~/id_rsa -t rsa -C "peter@elvwatt"
 ssh-copy-id -f -i ~/.ssh/id_rsa.pub peter@10.0.0.117
+
 https://wiki.termux.com/wiki/Remote_Access
+
+.ssh/config
+Host bbb-root
+     HostName 10.0.0.117
+     User root
+     IdentityFile ~/.ssh/bbb.ed25519
+Host bbb-peter
+     HostName 10.0.0.117
+     User peter
+     IdentityFile ~/.ssh/bbb.rsa
+
+ssh bbb-root
+ssh bbb-peter
+
+ssh 10.0.0.117 -l peter
 
 server:
 ~/.ssh # more authorized_keys 
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDFdNJP5jvQz83BHerNXup6ReYeIGoQnKyaYGdxfcnw6EYOhNUky+y0jZzkXgHQBbYKld2JgexmE8blGjaMz09bFi/Jao/lj/MjwTnkYSmhJQHUqf1HwM8AgFPRtlcTcwzfQghL36Ksww//6KhSugRt0vSMF4hvwPSH+iZHpNIjzZPBSqPzzxKBy/yTyl9fi3hqwG7SXN0tKEHyUz82m0nxzj64/gAyX1fv59eJq0KgUsZN3b0i8VnwUyfaRrQWEJkw567cWtp0B0HXPEnFimOpKTW9Rmp4yC7+FMjQEhWf+zWhrB2+JHtzW8pGgkgl9iwwN2KmcvbR1WGDtOfUOumf peter@elvwatt
-
-
-ssh 10.0.0.117 -l peter
 
 
 pkill dropbear
@@ -701,10 +714,35 @@ https://github.com/deeplyembeddedWP/SSD1306-OLED-display-driver-for-BeagleBone
 
 
 https://buildroot.org/download.html
+latest LTS 2023.02.06
 
 git clone git://git.buildroot.net/buildroot
-git checkout -b 2023.02.3.mybuildroot
+git checkout -b 2023.02.x.mybuildroot
+
+git branch
+* (HEAD detached at origin/2023.02.x)
+  2023.02.x.mybuildroot
+  master
+
 
 make list-defconfigs
 
+mkdir -p board/melp/nova
 
+./u-boot
+git log
+=> commit 83cdab8b2c6ea0fc0860f8444d083353b47f1d5c (tag: v2023.07.02, origin/u-boot-2023.07.y)
+git diff --patch 83cdab8b2c6ea0fc0860f8444d083353b47f1d5c HEAD >0001-BSP_for-Nova.patch
+cp 0001-BSP_for-Nova.patch ../buildroot/board/melp/nova/
+
+make menuconfig
+U-Boot version 2023.07.02
+cp 0001-BSP_for-Nova.patch ../buildroot/board/melp/nova/
+
+cp /home/peter/mastering_beaglebone/bootpartition_staging/uboot.env board/melp/nova/
+uboot.env -> uboot.env.tftf_and_nfs
+uboot.env.sdcard
+TODO correct uboot.env!
+
+TODO kernel patch file
+TODO kernel dts update w.r.t original file

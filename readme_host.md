@@ -20,22 +20,41 @@ lrwxrwxrwx 1 root root  13 Oct 26 16:02 pci-0000:00:14.0-usb-0:6:1.0-port0 -> ..
 # -- fstab
 # ---------------------
 
-/dev/sdb1 on /media/peter/11WATT_0.5T type fuseblk (rw,nosuid,nodev,relatime,user_id=0,group_id=0,default_permissions,allow_other,blksize=4096,uhelper=udisks2)
-/dev/sdc2 on /media/peter/STORAGE_Volume_11WATT type fuseblk (rw,nosuid,nodev,relatime,user_id=0,group_id=0,default_permissions,allow_other,blksize=4096,uhelper=udisks2)
-/dev/sda4 on /media/peter/11WATT_SSD0.5T type fuseblk (rw,nosuid,nodev,relatime,user_id=0,group_id=0,default_permissions,allow_other,blksize=4096,uhelper=udisks2)
+(1) lsblk
 
+NAME   MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT
+sda      8:0    0 465,8G  0 disk 
+├─sda1   8:1    0   450M  0 part 
+├─sda2   8:2    0   100M  0 part /boot/efi
+├─sda3   8:3    0    16M  0 part 
+├─sda4   8:4    0   291G  0 part /mnt/win_ssd0.5t
+├─sda5   8:5    0  48,8G  0 part 
+├─sda6   8:6    0   530M  0 part 
+├─sda7   8:7    0   489M  0 part 
+├─sda8   8:8    0   474M  0 part 
+└─sda9   8:9    0   124G  0 part /
+sdb      8:16   0 465,8G  0 disk 
+└─sdb1   8:17   0 465,8G  0 part /mnt/backup_0.5t
+sdc      8:32   0 931,5G  0 disk 
+├─sdc1   8:33   0   128M  0 part 
+└─sdc2   8:34   0 931,4G  0 part /mnt/storage_1.0t
+sr0     11:0    1  1024M  0 rom 
+
+(2) blkid
+blkid /dev/sdb1
 /dev/sdb1: LABEL="11WATT_0.5T" UUID="662872F92872C817" TYPE="ntfs" PARTUUID="0512b30a-01"
+blkid /dev/sdc2
 /dev/sdc2: LABEL="STORAGE_Volume_11WATT" UUID="96604E02604DE997" TYPE="ntfs" PARTLABEL="Basic data partition" PARTUUID="5bd3007e-e68d-4eb0-a795-1fa2bcdc0a20"
-/dev/sda4: LABEL="11WATT_SSD0.5T" UUID="D2CA0BF4CA0BD39F" TYPE="ntfs" PARTLABEL="Basic data partition" PARTUUID="89a179fc-ca6b-468b-a2e9-63a04f4a2b57"
+blkid /dev/sda4
+/dev/sda4: LABEL="11WATT_SSD0.5T" UUID="D2CA0BF4CA0BD39F" TYPE="ntfs" PARTLABEL="Basic data partition" PARTUUID="89a179fc-ca6b-468b-a2e9-63a04f4a2
+blkid /dev/sda5
+/dev/sda5: LABEL="11WATT_SSD50G" UUID="DEC62ACCC62AA4AD" TYPE="ntfs" PARTLABEL="Basic data partition" PARTUUID="a05fcfd7-bbe8-4bf5-bcc5-539740d6f286"
 
-/dev/sdb1: /mnt/backup_0.5t  UUID=662872F92872C817 ntfs
-/dev/sdc2: /mnt/storage_1.0t" UUID=96604E02604DE997 "ntfs
-/dev/sda4: /mnt/win_ssd0.5t" UUID=D2CA0BF4CA0BD39F ntfs
-
-/etc/fstab
+(3) /etc/fstab
 UUID=662872F92872C817 /mnt/backup_0.5t ntfs
 UUID=96604E02604DE997 /mnt/storage_1.0t ntfs
 UUID=D2CA0BF4CA0BD39F /mnt/win_ssd0.5t ntfs
+UUID=DEC62ACCC62AA4AD /mnt/win_ssd50g ntfs
 
 # ---------------------
 # -- GIT
@@ -56,6 +75,7 @@ git status
 
 git remote -v
 git remote add scr https://github.com/peterpridnig/scr
+git remote remove code
 
 git fetch scr
 git push scr
@@ -69,5 +89,8 @@ git remote show origin
 Login / Settings / Developer Settings / Personal Access Token / Classic
 
 github personal access token
-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
+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
 
+# ---------------------
+# -- SSH
+# ---------------------
