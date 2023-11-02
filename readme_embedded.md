@@ -53,6 +53,9 @@ dh      8:112  1   7,3G  0 disk
 └─sdh2   8:114  1     1G  0 part /media/peter/rootfs
 
 
+https://etcher.balena.io/#download-etcher
+=> ~/bin/balenaEtcher-1.18.11-x64.AppImage
+
 # ################
 # ## u-boot "2023.07.02"
 # ################
@@ -724,8 +727,10 @@ git branch
   2023.02.x.mybuildroot
   master
 
-
 make list-defconfigs
+
+./buildroot FIX!
+board/beaglebone/patches/linux remove patch-file 
 
 mkdir -p board/melp/nova
 
@@ -735,14 +740,39 @@ git log
 git diff --patch 83cdab8b2c6ea0fc0860f8444d083353b47f1d5c HEAD >0001-BSP_for-Nova.patch
 cp 0001-BSP_for-Nova.patch ../buildroot/board/melp/nova/
 
+./buildroot
 make menuconfig
 U-Boot version 2023.07.02
 cp 0001-BSP_for-Nova.patch ../buildroot/board/melp/nova/
 
-cp /home/peter/mastering_beaglebone/bootpartition_staging/uboot.env board/melp/nova/
-uboot.env -> uboot.env.tftf_and_nfs
-uboot.env.sdcard
-TODO correct uboot.env!
+cp $WORKAREA/bootpartition_sdcard_staging/uboot.env board/melp/nova/
 
-TODO kernel patch file
-TODO kernel dts update w.r.t original file
+
+./linux-stable
+git log
+=> commit b911329317b4218e63baf78f3f422efbaa7198ed (tag: v5.15.133, origin/linux-5.15.y, linux-5.15.y)
+git diff --patch b911329317b4218e63baf78f3f422efbaa7198ed HEAD >myLinuxKernel.patch
+cp myLinuxKernel.patch ../buildroot/board/melp/nova
+cp arch/arm/boot/dts/*nova.dts* ../buildroot/board/melp/nova
+
+
+(board/beaglebone/post-build.sh) Custom scripts to run before creating filesystem images
+=> "leave as is"
+
+(support/scripts/genimage.sh) Custom scripts to run after creating filesystem images
+=> post-image.sh
+
+
+enable dropbear, emacs, etc.
+
+make
+
+setenv bootargs ...ext4...
+make savedefconfig B2R_DEFCONFIG=configs/nova_defconfig
+
+make nova_defconfig
+
+etcher => output/images/sdcard.img
+
+gen /etc/network/interfaces
+scp led_blink.sh root@10.0.0.117:/root

@@ -85,12 +85,7 @@ git push origin master
 
 git remote show origin
 
-
+github personal access token
 Login / Settings / Developer Settings / Personal Access Token / Classic
 
-github personal access token
-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
-
-# ---------------------
-# -- SSH
-# ---------------------
+scp led_blink.sh root@10.0.0.117:/root
