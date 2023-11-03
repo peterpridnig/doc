@@ -1,3 +1,0 @@
-::sysinit:/etc/rcS
-::askfirst:/bin/ash
-ttyAMA0::askfirst:/bin/ash

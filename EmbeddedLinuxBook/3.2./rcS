@@ -1,6 +1,0 @@
-#!/bin/ash
-
-mount -t proc non /proc
-mount -t sysfs nont /sys
-ifconfig eth0 10.69.0.99
-httpd -c /etc/httpd.conf
