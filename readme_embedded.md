@@ -683,6 +683,12 @@ nmea parser: https://github.com/kosma/minmea
 # ## I2C
 # ################
 
+https://docs.kernel.org/i2c/index.html
+
+# ---------------------
+# -- i2c-tools
+# ---------------------
+
 i2cdetect -l
 
 i2c-2   i2c             OMAP I2C adapter                        I2C adapter
@@ -704,7 +710,19 @@ i2cset -y 2 -r 0x3c 0x40 0x09
 i2cget -y 2 0x3c 0x00
 
 # ---------------------
-# -- OLED
+# -- userspace c-code
+# ---------------------
+i2c-example.c
+=> f = open("/dev/i2c-2", O_RDWR);
+
+# ---------------------
+# -- device driver
+# ---------------------
+
+
+
+# ---------------------
+# -- OLED-display
 # ---------------------
 https://www.youtube.com/watch?v=sDKf6zW6Pyg (SSD1306 OLED Display with BeagleBone Black)
 https://github.com/deeplyembeddedWP/SSD1306-OLED-display-driver-for-BeagleBone
@@ -723,8 +741,7 @@ git clone git://git.buildroot.net/buildroot
 git checkout -b 2023.02.x.mybuildroot
 
 git branch
-* (HEAD detached at origin/2023.02.x)
-  2023.02.x.mybuildroot
+* 2023.02.x.mybuildroot
   master
 
 make list-defconfigs
@@ -776,3 +793,39 @@ etcher => output/images/sdcard.img
 
 gen /etc/network/interfaces
 scp led_blink.sh root@10.0.0.117:/root
+
+
+buildroot toolchain:
+arm-buildroot-linux-gnueabihf-gcc.br_real
+
+# ################
+# ## Device driver
+# ################
+
+# ---------------------
+# -- dummy driver
+# ---------------------
+
+code/dummy-driver_c
+Makefile
+=> LINUXDIR ?= $(WORKAREA)/buildroot/output/build/linux-5.15.133/
+make
+scp dummy.ko root@10.0.0.117:/root
+
+BBB:
+insmod dummy.ko
+lsmod
+rmmod
+
+# ls /dev/dummy*
+/dev/dummy0  /dev/dummy1  /dev/dummy2  /dev/dummy3
+
+# echo peter > /dev/dummy0
+[  366.003903] dummy_open
+[  366.006497] Write dummy_write 6
+[  366.010868] dummy_release
+
+# cat < /dev/dummy0
+[  454.560102] dummy_open
+[  454.580483] Read dummy_read 4096
+[  454.585637] dummy_release

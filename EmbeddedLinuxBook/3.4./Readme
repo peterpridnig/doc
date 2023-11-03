@@ -1,0 +1,9 @@
+Die im Buch eingesetzte Variante von U-Boot funktioniert
+nur mit ausgewählten SD-Karten. Erfolgversprechender ist
+eine Version von Stephen Warren in Kombination mit dem
+Mainline-Kernel
+(siehe https://ezs.kr.hsnr.de/EmbeddedBuch/addition/index.html)
+
+
+Di 19. Aug 17:49:51 CEST 2014, J. Quade
+ 

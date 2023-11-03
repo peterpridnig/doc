@@ -1,0 +1,4 @@
+usb start
+dhcp 00200000 192.168.178.25:uImage
+tftpboot 00f00000 192.168.178.25:initramfs.uboot
+bootm 00200000 00f00000
