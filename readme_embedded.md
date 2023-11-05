@@ -689,6 +689,7 @@ https://docs.kernel.org/i2c/index.html
 # -- i2c-tools
 # ---------------------
 
+identify i2c adapters
 i2cdetect -l
 
 i2c-2   i2c             OMAP I2C adapter                        I2C adapter
@@ -702,23 +703,21 @@ i2c2_pins: pinmux_i2c2_pins {
 		>;
 	};
 
+identify i2c slaves
+
 i2cdetect -y -r 2
+     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+00:          -- -- -- -- -- -- -- -- -- -- -- -- -- 
+10: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+20: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+30: -- -- -- -- -- -- -- -- -- -- -- -- 3c -- -- -- 
+40: -- -- -- -- -- -- -- -- 48 -- -- -- -- -- -- -- 
+50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+70: -- -- -- -- -- -- -- --
 
-i2cdump -y 2 0x3c b
- 
-i2cset -y 2 -r 0x3c 0x40 0x09
-i2cget -y 2 0x3c 0x00
-
-# ---------------------
-# -- userspace c-code
-# ---------------------
-i2c-example.c
-=> f = open("/dev/i2c-2", O_RDWR);
-
-# ---------------------
-# -- device driver
-# ---------------------
-
+=> OLED @ 0x3c
+=> ADC  @ 0x48
 
 
 # ---------------------
@@ -726,6 +725,42 @@ i2c-example.c
 # ---------------------
 https://www.youtube.com/watch?v=sDKf6zW6Pyg (SSD1306 OLED Display with BeagleBone Black)
 https://github.com/deeplyembeddedWP/SSD1306-OLED-display-driver-for-BeagleBone
+
+i2cdump -y 2 0x3c b
+
+"-r" == readback and compare
+i2cset -y 2 -r 0x3c 0x40 0x09
+i2cget -y 2 0x3c 0x00
+
+
+# ---------------------
+# -- ADC
+# ---------------------
+
+i2cset -y 2 0x48 0x01		//select config reg
+i2cset -y 2 0x48 0x04 0x80   	//write to config reg: cont conversion mode
+
+i2cset -y 2 0x48 0x01 0x44 0x80   	//write to config reg: cont conversion mode
+
+i2cset -y 2 0x48 0x01		//select config reg
+i2cget -y 2 0x48 0x01       	      	//read 
+
+
+i2cset -y 2 0x48 0x00		//select conv reg
+i2cget -y 2 0x48 0x00  	      	//read
+
+
+# ---------------------
+# -- userspace c-code
+# ---------------------
+i2c-example.c
+=> f = open("/dev/i2c-2", O_RDWR);
+
+
+# ---------------------
+# -- device driver
+# ---------------------
+
 
 
 
