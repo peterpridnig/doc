@@ -60,6 +60,8 @@ UUID=DEC62ACCC62AA4AD /mnt/win_ssd50g ntfs
 # -- GIT
 # ---------------------
 
+git init
+
 git log -n 3
 
 $ git commit -m 'initial commit'
@@ -79,6 +81,8 @@ git remote remove code
 
 git fetch scr
 git push scr
+
+git push --set-upstream code master
 
 git push origin master
 (origin=remote, master=branch)

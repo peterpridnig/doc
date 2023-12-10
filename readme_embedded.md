@@ -471,7 +471,8 @@ setenv bootcmd tftpboot 0x80200000 zImage\;tftpboot 0x80f00000 nova.dtb\;bootz 0
 
 
 # ---------------------
-# -- Data transfer
+# -- Data transfer via
+# -- nc
 # ---------------------
 
 Beaglebone
@@ -479,6 +480,14 @@ nc -v -l -p 4321 | tar xfv -
 
 Host
 tar cfv - <program> | nc 10.0.0.117 4321
+
+# ---------------------
+# -- Data transfer via
+# -- scp
+# ---------------------
+
+Beaglebone
+scp $(PROGRAM) root@10.0.0.117:/root
 
 
 # ################
@@ -583,6 +592,10 @@ sudo cp arch/arm/boot/dts/nova.dtb  /var/lib/tftpboot/
 # ## UART
 # ################
 
+# ---------------------
+# -- serial debug interface
+# ---------------------
+
 serial debug interface:
  UART0
  /dev/ttyS0
@@ -595,7 +608,8 @@ pin loopback / gtkterm
  microcom -s 115200 /dev/ttyS0
 
 # ---------------------
-# -- I/O
+# -- I/O interface vs.
+# -- PC
 # ---------------------
 
 UART1
@@ -638,6 +652,18 @@ microcom -s 115200 /dev/ttyS1
 
 microcom /dev/ttyS1
 
+# ---------------------
+# -- I/O interface vs.
+# -- Android smartphone
+# ---------------------
+
+Android smartphone
+PlayStore Serail USB Terminal
+Settings / Serial / Baudrate 115200
+Settings / Receive / Newline = CR
+
+microcom -s 115200 /dev/ttyS1
+CTRL+X
 
 # ---------------------
 # -- GPS
@@ -761,6 +787,64 @@ i2c-example.c
 LCD2004 20×4 LCD Character Display with HD44780 Tutorial (All Switches and LEDs, No Microcontroller)
 https://www.youtube.com/watch?v=Gd6GUsHL4FI
 
+# ################
+# ## SPI
+# ################
+
+
+https://dev.ti.com
+peter.pridnig@gmail.com
+"DavidBowie"
+
+
+https://elinux.org/BeagleBone_Black_Enable_SPIDEV
+
+https://dev.ti.com/sysconfig/#/start
+AM335x
+Package Default
+AM335x ZCE
+
+
+	spi0_pins_default: spi0-default-pins {
+		pinctrl-single,pins = <
+			AM33XX_IOPAD(0x950, PIN_INPUT_PULLUP  | MUX_MODE0) /* SPI0_SCLK    P9_22*/
+			AM33XX_IOPAD(0x954, PIN_INPUT_PULLUP  | MUX_MODE0) /* SPI0_D0 MISO P9_21*/
+			AM33XX_IOPAD(0x958, PIN_OUTPUT_PULLUP | MUX_MODE0) /* SPI0_D1 MOSI P9_18*/
+			AM33XX_IOPAD(0x95C, PIN_OUTPUT_PULLUP | MUX_MODE0) /* SPI0_CS0     P9_17*/
+		>;
+	};
+
+	spi1_pins_default: spi1-default-pins {
+		pinctrl-single,pins = <
+			AM33XX_IOPAD(0x990, PIN_INPUT_PULLUP  | MUX_MODE3)  /* SPI1_SCLK    P9_31*/
+			AM33XX_IOPAD(0x994, PIN_INPUT_PULLUP  | MUX_MODE3)  /* SPI1_D0 MISO P9_29*/			
+			AM33XX_IOPAD(0x998, PIN_OUTPUT_PULLUP | MUX_MODE3)  /* SPI1_D1 MOSI P9_30*/
+			AM33XX_IOPAD(0x99C, PIN_OUTPUT_PULLUP | MUX_MODE3)  /* SPI1_CS0     P9_28*/
+		>;
+	};
+
+&spi0 {
+         status = "okay";
+         pinctrl-names = "default";
+         pinctrl-0 = <&spi0_pins_default>;
+         spidev@0 {
+                  spi-max-frequency = <24000000>;
+                  reg = <0>;
+		  compatible = "rohm,dh2228fv";
+        };
+};
+
+linux-stable:
+grep compatible drivers/spi/spidev.c
+=> rohm,dh2228fv
+
+ls /sys/bus/spi
+
+spidev[bus].[chip select]
+spidev0.0
+
+spidev_test -D /dev/spidev0.0 -v
+spi-config -d /dev/spidev0.0
 
 # ################
 # ## buildroot "2023.02.3"
@@ -778,41 +862,47 @@ git branch
 
 make list-defconfigs
 
-./buildroot FIX!
+./buildroot necessary FIX!
 board/beaglebone/patches/linux remove patch-file 
 
+# individual configuration
 mkdir -p board/melp/nova
 
-./u-boot
+# ./u-boot
 git log
 => commit 83cdab8b2c6ea0fc0860f8444d083353b47f1d5c (tag: v2023.07.02, origin/u-boot-2023.07.y)
 git diff --patch 83cdab8b2c6ea0fc0860f8444d083353b47f1d5c HEAD >0001-BSP_for-Nova.patch
 cp 0001-BSP_for-Nova.patch ../buildroot/board/melp/nova/
 
-./buildroot
-make menuconfig
-U-Boot version 2023.07.02
-cp 0001-BSP_for-Nova.patch ../buildroot/board/melp/nova/
-
-cp $WORKAREA/bootpartition_sdcard_staging/uboot.env board/melp/nova/
-
-
-./linux-stable
+# ./linux-stable
 git log
 => commit b911329317b4218e63baf78f3f422efbaa7198ed (tag: v5.15.133, origin/linux-5.15.y, linux-5.15.y)
 git diff --patch b911329317b4218e63baf78f3f422efbaa7198ed HEAD >myLinuxKernel.patch
 cp myLinuxKernel.patch ../buildroot/board/melp/nova
 cp arch/arm/boot/dts/*nova.dts* ../buildroot/board/melp/nova
+cp .config ../buildroot/board/melp/nove/linuxkernel.config
+"Use custom kernel config file"
+
+# ./buildroot
+make menuconfig
+enable dropbear, emacs, c++-support, spidev_test, spi-tools, libftdi etc.
+
+make busybox-menuconfig
+Networking Utilities/httpd
 
 
+U-Boot version 2023.07.02
+cp 0001-BSP_for-Nova.patch ../buildroot/board/melp/nova/
+
+cp $WORKAREA/bootpartition_sdcard_staging/uboot.env board/melp/nova/
+
+System configuration / Custom scripts to run before commencing the build
 (board/beaglebone/post-build.sh) Custom scripts to run before creating filesystem images
-=> "leave as is"
+cp ../board/beaglebone/post-build.sh board/melp/nova
 
+System configuration / Custom scripts to run 
 (support/scripts/genimage.sh) Custom scripts to run after creating filesystem images
 => post-image.sh
-
-
-enable dropbear, emacs, c++-support, etc.
 
 set target rootfs size 500MB
 
@@ -820,15 +910,21 @@ make
 
 
 make savedefconfig B2R_DEFCONFIG=configs/nova_defconfig
+cp .config configs/nova_defconfig
 make nova_defconfig
 
 etcher => output/images/sdcard.img
 
-uboot: setenv bootargs ...ext4...
-
+ensure nova board is in place:
 dmesg | grep Nova
 
-gen /etc/network/interfaces
+# ---------------------
+# -- manual adjustments
+# ---------------------
+
+1. uboot: setenv bootargs ...ext4... (DONE manually)
+
+2. enhance /etc/network/interfaces (DONE by posbuild-sh)
  # interface file auto-generated by buildroot
 
  auto lo
@@ -840,15 +936,25 @@ gen /etc/network/interfaces
    netmask 255.255.255.0
    network 10.0.0.0
 
-gen /root/.ssh/authorized_keys
+ifup -a
+
+3. gen /root/.ssh/authorized_keys (DONE by posbuild-sh)
  ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIO9xr1NOjapEzY2vmRkxKOk0GTqnt8t0gbK2DWiefjY8 peter@elvwatt
  ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDFdNJP5jvQz83BHerNXup6ReYeIGoQnKyaYGdxfcnw6EYOhNUky+y0jZzkXgHQBbYKld2JgexmE8blGjaMz09bFi/Jao/lj/MjwTnkYSmhJQHUqf1HwM8AgFPRtlcTcwzfQghL36Ksww//6KhSugRt0vSMF4hvwPSH+iZHpNIjzZPBSqPzzxKBy/yTyl9fi3hqwG7SXN0tKEHyUz82m0nxzj64/gAyX1fv59eJq0KgUsZN3b0i8VnwUyfaRrQWEJkw567cWtp0B0HXPEnFimOpKTW9Rmp4yC7+FMjQEhWf+zWhrB2+JHtzW8pGgkgl9iwwN2KmcvbR1WGDtOfUOumf peter@elvwatt
  ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMrUit/euWrT97lu13V9wBuhT8AupKLLdIZ5jaz31ERk peter@11watt
 
+
+4. mount -t debugfs none /sys/kernel/debug (DONE by posbuild-sh)
+
+
+5. function test:
 scp led_blink.sh root@10.0.0.117:/root
+
 
 buildroot toolchain:
 arm-buildroot-linux-gnueabihf-gcc.br_real
+
+
 
 # ################
 # ## Device driver
