@@ -653,7 +653,7 @@ microcom -s 115200 /dev/ttyS1
 microcom /dev/ttyS1
 
 # ---------------------
-# -- I/O interface vs.
+# -- UART1 interface vs.
 # -- Android smartphone
 # ---------------------
 
@@ -666,7 +666,8 @@ microcom -s 115200 /dev/ttyS1
 CTRL+X
 
 # ---------------------
-# -- GPS
+# -- GPS vs.
+# -- BBB
 # ---------------------
 
 UART4
@@ -706,6 +707,15 @@ microcom /dev/ttyS4
 microcom -s 9600 /dev/ttyS4
 
 nmea parser: https://github.com/kosma/minmea
+
+# ---------------------
+# -- ATTINY13 vs. BBB
+# ---------------------
+
+UART2
+
+microcom -s 115200 /dev/ttyS2
+
 
 # ################
 # ## I2C
@@ -843,8 +853,10 @@ ls /sys/bus/spi
 spidev[bus].[chip select]
 spidev0.0
 
-spidev_test -D /dev/spidev0.0 -v
-spi-config -d /dev/spidev0.0
+spidev_test -D /dev/spidev1.0 -v
+spi-config -d /dev/spidev1.0
+
+./spidev_test -D /dev/spidev1.0
 
 # ################
 # ## buildroot "2023.02.3"
