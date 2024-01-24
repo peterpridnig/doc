@@ -709,6 +709,7 @@ https://dev.ti.com/sysconfig/#/start
 GPS-Baudrate: 9600
 microcom /dev/ttyS4
 microcom -s 9600 /dev/ttyS4
+CTL-X
 
 nmea parser: https://github.com/kosma/minmea
 
@@ -790,16 +791,18 @@ x,y,z @ 0g = . 1.7V
 i2c-example.c
 => f = open("/dev/i2c-2", O_RDWR);
 
-
-# ---------------------
-# -- device driver
-# ---------------------
-
 # ---------------------
 # -- hd44780
 # ---------------------
 LCD2004 20×4 LCD Character Display with HD44780 Tutorial (All Switches and LEDs, No Microcontroller)
 https://www.youtube.com/watch?v=Gd6GUsHL4FI
+
+# ---------------------
+# -- port extender
+# -- pcf8574
+# ---------------------
+Adr. 0x27
+
 
 # ################
 # ## SPI
@@ -861,6 +864,12 @@ spidev_test -D /dev/spidev1.0 -v
 spi-config -d /dev/spidev1.0
 
 ./spidev_test -D /dev/spidev1.0
+
+# ---------------------
+# -- SDCARD TODO
+# ---------------------
+Writing To an SD Card with SPI, Data Logger to SD Card. Programmed in C
+http://www.rjhcoding.com/avrc-tutorials-home.php
 
 # ################
 # ## buildroot "2023.02.3"
@@ -1023,3 +1032,8 @@ MACHINE ?= "qemuarm"
 
 sudo apt-get install chrpath
 bitbake core-image-minimal
+
+# ################
+# ## RASPBERRY PI
+# ################
+ssh kali-kali
